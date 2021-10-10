@@ -6,7 +6,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0"
+home = "0.5.3"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 reqwest = "0.11.5"
 structopt = "0.3.23"
+thiserror = "1.0"
+tokio = { version = "1.12", features = ["macros", "rt-multi-thread", "net"] }
+zip = "0.5"
+
