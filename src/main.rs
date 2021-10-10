@@ -141,7 +141,7 @@ mod test_command {
     fn test_valid_install_command() {
         let install = Install {
             nerd: true,
-            nerd_name: Some(NerdFonts::SourceCode("SourceCode".into())),
+            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
             path: None,
             url: None,
             delete_zip: true,
@@ -154,7 +154,7 @@ mod test_command {
         // Given more than one flag should fail
         let mut install = Install {
             nerd: true,
-            nerd_name: Some(NerdFonts::SourceCode("SourceCode".into())),
+            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
             path: Some("the path".into()),
             url: None,
             delete_zip: true,
@@ -178,7 +178,7 @@ mod test_command {
         assert!(install.valid_command().is_err());
         let install = Install {
             nerd: true,
-            nerd_name: Some(NerdFonts::SourceCode("SourceCode".into())),
+            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
             path: None,
             url: Some("the url".into()),
             delete_zip: true,
@@ -201,7 +201,7 @@ mod test_command {
         // Given a nerd name without a nerd flag, should fail
         let install = Install {
             nerd: false,
-            nerd_name: Some(NerdFonts::SourceCode("SourceCode".into())),
+            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
             path: None,
             url: None,
             delete_zip: true,
@@ -220,7 +220,7 @@ mod tests_manager {
         pretty_env_logger::init();
         let install = Install {
             nerd: true,
-            nerd_name: Some(NerdFonts::SourceCode("Monoid".into())),
+            nerd_name: Some(NerdFonts::SourceCodePro("Monoid".into())),
             path: None,
             url: None,
             delete_zip: true,
