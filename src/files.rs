@@ -30,7 +30,7 @@ pub(crate) fn extract_fonts_from_zip(
             None => continue,
         };
 
-        // Safe to unwrap as the path was already contructed an exists
+        // Safe to unwrap as the path was already contructed and exists
         // Ignores Windows fonts
         if outpath.to_str().unwrap().contains("Windows") {
             info!("{} ignored", outpath.display());
