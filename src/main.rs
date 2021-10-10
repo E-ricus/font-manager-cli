@@ -12,6 +12,7 @@ use log::debug;
 use structopt::StructOpt;
 
 use crate::errors::FontError;
+use crate::files::ExtractOptions;
 use crate::manager::{install_from_url, install_from_zip, uninstall};
 use crate::nerd::{install_nerd, uninstall_nerd, NerdFonts};
 
@@ -46,9 +47,27 @@ struct Install {
     /// for --nerd it will always delete the zip even if this is provided
     #[structopt(short = "d", long = "delete-zip")]
     delete_zip: bool,
+    /// indicates if should ignore .ttf and use .otf version
+    #[structopt(long = "use-otf")]
+    use_otf: bool,
+    /// indicates if user shold accept each file to be installed
+    #[structopt(short = "i", long = "interactive")]
+    interactive: bool,
 }
 
 impl Install {
+    #[cfg(test)]
+    fn new() -> Self {
+        Self {
+            nerd: false,
+            nerd_name: None,
+            path: None,
+            url: None,
+            delete_zip: true,
+            use_otf: false,
+            interactive: false,
+        }
+    }
     fn valid_command(&self) -> Result<()> {
         let valid = vec![self.nerd, self.path.is_some(), self.url.is_some()];
         let mut count = 0;
@@ -114,15 +133,22 @@ async fn manage_font(opt: FontManager) -> Result<()> {
     match opt {
         FontManager::Install(i) => {
             i.valid_command()?;
+
+            let ext_opt = ExtractOptions {
+                delete_zip: i.delete_zip,
+                use_otf: i.use_otf,
+                interactive: i.interactive,
+            };
+
             if i.nerd {
                 // Safe to unwrap, as this is already validated
-                return install_nerd(i.nerd_name.unwrap()).await;
+                return install_nerd(i.nerd_name.unwrap(), ext_opt).await;
             }
             if let Some(url) = i.url {
-                return install_from_url(&url, i.delete_zip).await;
+                return install_from_url(&url, ext_opt).await;
             }
             if let Some(path) = i.path {
-                return install_from_zip(&path, i.delete_zip).await;
+                return install_from_zip(&path, ext_opt).await;
             }
         }
         FontManager::Uninstall(u) => match NerdFonts::from_str(&u.name) {
@@ -145,6 +171,8 @@ mod test_command {
             path: None,
             url: None,
             delete_zip: true,
+            use_otf: false,
+            interactive: false,
         };
         assert!(install.valid_command().is_ok())
     }
@@ -152,13 +180,10 @@ mod test_command {
     #[test]
     fn test_invalid_install_command() {
         // Given more than one flag should fail
-        let mut install = Install {
-            nerd: true,
-            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
-            path: Some("the path".into()),
-            url: None,
-            delete_zip: true,
-        };
+        let mut install = Install::new();
+        install.nerd = true;
+        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.path = Some("the path".into());
         assert!(install.valid_command().is_err());
 
         // Given all flags, should fail
@@ -166,46 +191,27 @@ mod test_command {
         assert!(install.valid_command().is_err());
 
         // Given no flags, should fail
-        let install = Install {
-            nerd: false,
-            nerd_name: None,
-            path: None,
-            url: None,
-            delete_zip: true,
-        };
+        let install = Install::new();
+        assert!(install.valid_command().is_err());
 
         // Given any flag and last, should fail
-        assert!(install.valid_command().is_err());
-        let install = Install {
-            nerd: true,
-            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
-            path: None,
-            url: Some("the url".into()),
-            delete_zip: true,
-        };
+        let mut install = Install::new();
+        install.nerd = true;
+        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.url = Some("the url".into());
         assert!(install.valid_command().is_err());
     }
 
     #[test]
     fn test_install_invalid_nerd() {
         // Given no nerd name with nerd flag, should fail
-        let install = Install {
-            nerd: true,
-            nerd_name: None,
-            path: None,
-            url: None,
-            delete_zip: true,
-        };
+        let mut install = Install::new();
+        install.nerd = true;
         assert!(install.valid_command().is_err());
 
         // Given a nerd name without a nerd flag, should fail
-        let install = Install {
-            nerd: false,
-            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
-            path: None,
-            url: None,
-            delete_zip: true,
-        };
+        let mut install = Install::new();
+        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
         assert!(install.valid_command().is_err());
     }
 }
@@ -218,13 +224,9 @@ mod tests_manager {
     async fn test_nerd_monoid() {
         env::set_var("RUST_LOG", "DEBUG");
         pretty_env_logger::init();
-        let install = Install {
-            nerd: true,
-            nerd_name: Some(NerdFonts::SourceCodePro("Monoid".into())),
-            path: None,
-            url: None,
-            delete_zip: true,
-        };
+        let mut install = Install::new();
+        install.nerd = true;
+        install.nerd_name = Some(NerdFonts::SourceCodePro("Monoid".into()));
         let opt = FontManager::Install(install);
         let result = manage_font(opt).await;
         assert!(result.is_ok());
@@ -239,13 +241,9 @@ mod tests_manager {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_zip_firacode() {
-        let install = Install {
-            nerd: false,
-            nerd_name: None,
-            path: Some("test-data/FiraCodeTest.zip".into()),
-            url: None,
-            delete_zip: false,
-        };
+        let mut install = Install::new();
+        install.path = Some("test-data/FiraCodeTest.zip".into());
+        install.delete_zip = false;
         let opt = FontManager::Install(install);
         let result = manage_font(opt).await;
         assert!(result.is_ok());
@@ -260,13 +258,8 @@ mod tests_manager {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_url_jetbrains() {
-        let install = Install {
-            nerd: false,
-            nerd_name: None,
-            path: None,
-            url: Some("https://download.jetbrains.com/fonts/JetBrainsMono-2.242.zip".into()),
-            delete_zip: false,
-        };
+        let mut install = Install::new();
+        install.url = Some("https://download.jetbrains.com/fonts/JetBrainsMono-2.242.zip".into());
         let opt = FontManager::Install(install);
         let result = manage_font(opt).await;
         assert!(result.is_ok());

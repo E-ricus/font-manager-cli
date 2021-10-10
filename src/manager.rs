@@ -9,6 +9,7 @@ use log::{error, info};
 use crate::errors::FontError;
 use crate::files::extract_fonts_from_zip;
 use crate::files::remove_font_dir;
+use crate::files::ExtractOptions;
 
 pub(crate) async fn download_zip<'a, 'b>(url: &'a str, fname: &'b str) -> Result<&'b Path> {
     info!("Downloading: {}", url);
@@ -20,7 +21,7 @@ pub(crate) async fn download_zip<'a, 'b>(url: &'a str, fname: &'b str) -> Result
     Ok(path)
 }
 
-pub(crate) async fn install_from_url(url: &str, delete_zip: bool) -> Result<()> {
+pub(crate) async fn install_from_url(url: &str, opts: ExtractOptions) -> Result<()> {
     // safe to unwrap, A valid url must have at least one /
     let fname = url.split('/').last().unwrap();
     let fname = format!("./{}", fname);
@@ -30,20 +31,20 @@ pub(crate) async fn install_from_url(url: &str, delete_zip: bool) -> Result<()> 
         .ok_or(FontError::InvalidPath)?
         .to_str()
         .ok_or(FontError::InvalidPath)?;
-    let installed = extract_fonts_from_zip(path, fname, delete_zip)?;
+    let installed = extract_fonts_from_zip(path, fname, opts)?;
     info!("{} ttf or otf fonts installed!", installed);
     refresh_font_cache();
     Ok(())
 }
 
-pub(crate) async fn install_from_zip(path: &Path, delete_zip: bool) -> Result<()> {
+pub(crate) async fn install_from_zip(path: &Path, opts: ExtractOptions) -> Result<()> {
     let fname = path
         .file_stem()
         .ok_or(FontError::InvalidPath)?
         .to_str()
         .ok_or(FontError::InvalidPath)?;
 
-    let installed = extract_fonts_from_zip(path, fname, delete_zip)?;
+    let installed = extract_fonts_from_zip(path, fname, opts)?;
     info!("{} ttf or otf fonts installed!", installed);
     refresh_font_cache();
     Ok(())

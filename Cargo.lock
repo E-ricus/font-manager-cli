@@ -202,6 +202,7 @@ dependencies = [
  "pretty_env_logger",
  "reqwest",
  "structopt",
+ "text_io",
  "thiserror",
  "tokio",
  "zip",
@@ -949,6 +950,12 @@ checksum = "2dfed899f0eb03f32ee8c6a0aabdb8a7949659e3466561fc0adf54e26d88c5f4"
 dependencies = [
  "winapi-util",
 ]
+
+[[package]]
+name = "text_io"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee74b5019b48991b09803402aaf9e65a053b3993fe9d9c475ab67a395358ba76"
 
 [[package]]
 name = "textwrap"

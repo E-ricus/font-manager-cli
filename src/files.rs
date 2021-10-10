@@ -5,15 +5,23 @@ use std::{fs, io};
 use anyhow::Result;
 use home::home_dir;
 use log::{debug, info};
+use text_io::read;
 
 use crate::errors::FontError;
 
 const INSTALL_PATH: &str = ".fonts";
 
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct ExtractOptions {
+    pub(crate) delete_zip: bool,
+    pub(crate) use_otf: bool,
+    pub(crate) interactive: bool,
+}
+
 pub(crate) fn extract_fonts_from_zip(
     zip_path: &Path,
     font_name: &str,
-    delete_zip: bool,
+    opts: ExtractOptions,
 ) -> Result<u32> {
     debug!("Starting to unzip");
     let file = File::open(zip_path)?;
@@ -30,19 +38,18 @@ pub(crate) fn extract_fonts_from_zip(
             None => continue,
         };
 
-        // Safe to unwrap as the path was already contructed and exists
-        // Ignores Windows fonts
-        if outpath.to_str().unwrap().contains("Windows") {
-            info!("{} ignored", outpath.display());
-            continue;
-        }
+        let file_name = &*file.name();
 
-        if (&*file.name()).ends_with('/') {
-            info!("Extracting directory: \"{}\"", outpath.display());
+        if file_name.ends_with('/') {
+            info!("Extracting directory in: \"{}\"", outpath.display());
             fs::create_dir_all(&outpath)?;
         } else {
+            if should_ignore(opts, file_name, &outpath) {
+                info!("{} ignored", file_name);
+                continue;
+            }
             info!(
-                "Extracting file: \"{}\" ({} bytes)",
+                "Extracting file in: \"{}\" ({} bytes)",
                 outpath.display(),
                 file.size()
             );
@@ -66,7 +73,7 @@ pub(crate) fn extract_fonts_from_zip(
         }
         installed += 1;
     }
-    if delete_zip {
+    if opts.delete_zip {
         fs::remove_file(zip_path)?;
     }
     Ok(installed)
@@ -86,5 +93,34 @@ fn append_font_dir(p: &Path, d: &str) -> Result<PathBuf> {
     match p.parent() {
         Some(dirs) => Ok(home.join(INSTALL_PATH).join(d).join(dirs).join(file_name)),
         None => Ok(home.join(INSTALL_PATH).join(d).join(file_name)),
+    }
+}
+
+fn should_ignore(opts: ExtractOptions, file_name: &str, outpath: &Path) -> bool {
+    debug!("file name: {}", file_name);
+    // Safe to unwrap as the path was already contructed and exists
+    // Ignores Windows fonts
+    if outpath.to_str().unwrap().contains("Windows") {
+        return true;
+    }
+
+    if opts.interactive {
+        println!();
+        info!("Install: {}?", file_name);
+        let mut selection = String::from("");
+        let options = vec!["Y", "y", "Yes", "yes", "N", "n", "No", "no"];
+        while !options.contains(&selection.as_str()) {
+            info!("[Yes/No]");
+            selection = read!();
+        }
+        if vec!["Y", "y", "Yes", "yes"].contains(&selection.as_str()) {
+            return false;
+        }
+        return true;
+    }
+
+    match opts.use_otf {
+        true => file_name.ends_with(".ttf"),
+        false => file_name.ends_with(".otf"),
     }
 }
