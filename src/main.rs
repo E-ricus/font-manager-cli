@@ -239,8 +239,6 @@ mod tests_manager {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_zip_firacode() {
-        env::set_var("RUST_LOG", "DEBUG");
-        pretty_env_logger::init();
         let install = Install {
             nerd: false,
             nerd_name: None,
@@ -262,8 +260,6 @@ mod tests_manager {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_url_jetbrains() {
-        env::set_var("RUST_LOG", "DEBUG");
-        pretty_env_logger::init();
         let install = Install {
             nerd: false,
             nerd_name: None,
