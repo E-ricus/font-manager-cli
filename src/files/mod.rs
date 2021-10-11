@@ -1,3 +1,5 @@
+mod util;
+
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
@@ -5,9 +7,9 @@ use std::{fs, io};
 use anyhow::Result;
 use home::home_dir;
 use log::{debug, info};
-use text_io::read;
 
 use crate::errors::FontError;
+use crate::files::util::should_ignore;
 
 const INSTALL_PATH: &str = ".fonts";
 
@@ -93,34 +95,5 @@ fn append_font_dir(p: &Path, d: &str) -> Result<PathBuf> {
     match p.parent() {
         Some(dirs) => Ok(home.join(INSTALL_PATH).join(d).join(dirs).join(file_name)),
         None => Ok(home.join(INSTALL_PATH).join(d).join(file_name)),
-    }
-}
-
-fn should_ignore(opts: ExtractOptions, file_name: &str, outpath: &Path) -> bool {
-    debug!("file name: {}", file_name);
-    // Safe to unwrap as the path was already contructed and exists
-    // Ignores Windows fonts
-    if outpath.to_str().unwrap().contains("Windows") {
-        return true;
-    }
-
-    if opts.interactive {
-        println!();
-        info!("Install: {}?", file_name);
-        let mut selection = String::from("");
-        let options = vec!["Y", "y", "Yes", "yes", "N", "n", "No", "no"];
-        while !options.contains(&selection.as_str()) {
-            info!("[Yes/No]");
-            selection = read!();
-        }
-        if vec!["Y", "y", "Yes", "yes"].contains(&selection.as_str()) {
-            return false;
-        }
-        return true;
-    }
-
-    match opts.use_otf {
-        true => file_name.ends_with(".ttf"),
-        false => file_name.ends_with(".otf"),
     }
 }

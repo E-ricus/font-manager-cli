@@ -32,9 +32,7 @@ pub(crate) async fn install_from_url(url: &str, opts: ExtractOptions) -> Result<
         .to_str()
         .ok_or(FontError::InvalidPath)?;
     let installed = extract_fonts_from_zip(path, fname, opts)?;
-    info!("{} ttf or otf fonts installed!", installed);
-    refresh_font_cache();
-    Ok(())
+    manage_installed(installed)
 }
 
 pub(crate) async fn install_from_zip(path: &Path, opts: ExtractOptions) -> Result<()> {
@@ -45,9 +43,7 @@ pub(crate) async fn install_from_zip(path: &Path, opts: ExtractOptions) -> Resul
         .ok_or(FontError::InvalidPath)?;
 
     let installed = extract_fonts_from_zip(path, fname, opts)?;
-    info!("{} ttf or otf fonts installed!", installed);
-    refresh_font_cache();
-    Ok(())
+    manage_installed(installed)
 }
 
 pub(crate) async fn uninstall(name: &str) -> Result<()> {
@@ -55,6 +51,17 @@ pub(crate) async fn uninstall(name: &str) -> Result<()> {
     info!("{} fonts uninstalled!", name);
     refresh_font_cache();
     Ok(())
+}
+
+pub(crate) fn manage_installed(installed: u32) -> Result<()> {
+    match installed {
+        0 => Err(FontError::FontsIgnored.into()),
+        _ => {
+            info!("{} fonts installed!", installed);
+            refresh_font_cache();
+            Ok(())
+        }
+    }
 }
 
 pub(crate) fn refresh_font_cache() {
