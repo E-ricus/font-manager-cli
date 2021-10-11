@@ -2,9 +2,8 @@ use std::str::FromStr;
 use std::string::ToString;
 
 use anyhow::Result;
-use log::info;
 
-use crate::files::{extract_fonts_from_zip, remove_font_dir, ExtractOptions};
+use crate::files::{self, ExtractOptions};
 use crate::manager;
 
 const NERD_URL: &str = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/";
@@ -182,20 +181,20 @@ impl ToString for NerdFonts {
 
 pub(crate) async fn install_nerd(font: NerdFonts, mut opts: ExtractOptions) -> Result<()> {
     let mut font_name = font.to_string();
-    info!("installing {} Nerd Font!", font_name);
+    log::info!("installing {} Nerd Font!", font_name);
     let url = format!("{}{}.zip", NERD_URL, font_name);
     let path = manager::download_zip(&url, "font.zip").await?;
     font_name.push_str("NerdFont");
     opts.delete_zip = true;
-    let installed = extract_fonts_from_zip(path, &font_name, opts)?;
+    let installed = files::extract_fonts_from_zip(path, &font_name, opts)?;
     manager::manage_installed(installed)
 }
 pub(crate) async fn uninstall_nerd(font: NerdFonts) -> Result<()> {
     let mut font_name = font.to_string();
-    info!("uninstalling {} Nerd Font!", font_name);
+    log::info!("uninstalling {} Nerd Font!", font_name);
     font_name.push_str("NerdFont");
-    remove_font_dir(&font_name)?;
-    info!("{} uninstalled!", font_name);
+    files::remove_font_dir(&font_name)?;
+    log::info!("{} uninstalled!", font_name);
     manager::refresh_font_cache();
     Ok(())
 }

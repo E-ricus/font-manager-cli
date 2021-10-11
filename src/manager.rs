@@ -4,15 +4,12 @@ use std::path::Path;
 use std::process::Command;
 
 use anyhow::Result;
-use log::{error, info};
 
 use crate::errors::FontError;
-use crate::files::extract_fonts_from_zip;
-use crate::files::remove_font_dir;
-use crate::files::ExtractOptions;
+use crate::files::{self, ExtractOptions};
 
 pub(crate) async fn download_zip<'a, 'b>(url: &'a str, fname: &'b str) -> Result<&'b Path> {
-    info!("Downloading: {}", url);
+    log::info!("Downloading: {}", url);
     let response = reqwest::get(url).await?;
     let response = response.error_for_status()?;
     let path = Path::new(fname);
@@ -31,7 +28,7 @@ pub(crate) async fn install_from_url(url: &str, opts: ExtractOptions) -> Result<
         .ok_or(FontError::InvalidPath)?
         .to_str()
         .ok_or(FontError::InvalidPath)?;
-    let installed = extract_fonts_from_zip(path, fname, opts)?;
+    let installed = files::extract_fonts_from_zip(path, fname, opts)?;
     manage_installed(installed)
 }
 
@@ -42,13 +39,13 @@ pub(crate) async fn install_from_zip(path: &Path, opts: ExtractOptions) -> Resul
         .to_str()
         .ok_or(FontError::InvalidPath)?;
 
-    let installed = extract_fonts_from_zip(path, fname, opts)?;
+    let installed = files::extract_fonts_from_zip(path, fname, opts)?;
     manage_installed(installed)
 }
 
 pub(crate) async fn uninstall(name: &str) -> Result<()> {
-    remove_font_dir(name)?;
-    info!("{} fonts uninstalled!", name);
+    files::remove_font_dir(name)?;
+    log::info!("{} fonts uninstalled!", name);
     refresh_font_cache();
     Ok(())
 }
@@ -57,7 +54,7 @@ pub(crate) fn manage_installed(installed: u32) -> Result<()> {
     match installed {
         0 => Err(FontError::FontsIgnored.into()),
         _ => {
-            info!("{} fonts installed!", installed);
+            log::info!("{} fonts installed!", installed);
             refresh_font_cache();
             Ok(())
         }
@@ -65,12 +62,12 @@ pub(crate) fn manage_installed(installed: u32) -> Result<()> {
 }
 
 pub(crate) fn refresh_font_cache() {
-    info!("Refreshing font cache!");
+    log::info!("Refreshing font cache!");
     if Command::new("fc-cache")
         .args(["-f", "-v"])
         .output()
         .is_err()
     {
-        error!("Couldn't refresh font cache! try running \"fc-cache -f -v\"")
+        log::error!("Couldn't refresh font cache! try running \"fc-cache -f -v\"")
     };
 }

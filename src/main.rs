@@ -8,13 +8,11 @@ use std::env;
 use std::str::FromStr;
 
 use anyhow::Result;
-use log::debug;
 use structopt::StructOpt;
 
 use crate::command::FontManager;
 use crate::files::ExtractOptions;
-use crate::manager::{install_from_url, install_from_zip, uninstall};
-use crate::nerd::{install_nerd, uninstall_nerd, NerdFonts};
+use crate::nerd::NerdFonts;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,7 +32,7 @@ async fn main() -> Result<()> {
 }
 
 async fn manage_font(opt: FontManager) -> Result<()> {
-    debug!("Args command: {:#?}", opt);
+    log::debug!("Args command: {:#?}", opt);
     match opt {
         FontManager::Install(i) => {
             i.valid_command()?;
@@ -47,18 +45,18 @@ async fn manage_font(opt: FontManager) -> Result<()> {
 
             if i.nerd {
                 // Safe to unwrap, as this is already validated
-                return install_nerd(i.nerd_name.unwrap(), ext_opt).await;
+                return nerd::install_nerd(i.nerd_name.unwrap(), ext_opt).await;
             }
             if let Some(url) = i.url {
-                return install_from_url(&url, ext_opt).await;
+                return manager::install_from_url(&url, ext_opt).await;
             }
             if let Some(path) = i.path {
-                return install_from_zip(&path, ext_opt).await;
+                return manager::install_from_zip(&path, ext_opt).await;
             }
         }
         FontManager::Uninstall(u) => match NerdFonts::from_str(&u.name) {
-            Ok(n) => uninstall_nerd(n).await?,
-            Err(_) => uninstall(&u.name).await?,
+            Ok(n) => nerd::uninstall_nerd(n).await?,
+            Err(_) => manager::uninstall(&u.name).await?,
         },
     }
     Ok(())

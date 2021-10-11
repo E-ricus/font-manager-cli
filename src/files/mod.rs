@@ -5,11 +5,8 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use anyhow::Result;
-use home::home_dir;
-use log::{debug, info};
 
 use crate::errors::FontError;
-use crate::files::util::should_ignore;
 
 const INSTALL_PATH: &str = ".fonts";
 
@@ -25,10 +22,10 @@ pub(crate) fn extract_fonts_from_zip(
     font_name: &str,
     opts: ExtractOptions,
 ) -> Result<u32> {
-    debug!("Starting to unzip");
+    log::debug!("Starting to unzip");
     let file = File::open(zip_path)?;
     let mut archive = zip::ZipArchive::new(file)?;
-    debug!("unziped");
+    log::debug!("unziped");
     let mut installed = 0;
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
@@ -43,14 +40,14 @@ pub(crate) fn extract_fonts_from_zip(
         let file_name = &*file.name();
 
         if file_name.ends_with('/') {
-            info!("Extracting directory in: \"{}\"", outpath.display());
+            log::info!("Extracting directory in: \"{}\"", outpath.display());
             fs::create_dir_all(&outpath)?;
         } else {
-            if should_ignore(opts, file_name, &outpath) {
-                info!("{} ignored", file_name);
+            if util::should_ignore(opts, file_name, &outpath) {
+                log::info!("{} ignored", file_name);
                 continue;
             }
-            info!(
+            log::info!(
                 "Extracting file in: \"{}\" ({} bytes)",
                 outpath.display(),
                 file.size()
@@ -82,14 +79,14 @@ pub(crate) fn extract_fonts_from_zip(
 }
 
 pub(crate) fn remove_font_dir(font_name: &str) -> Result<()> {
-    let home = home_dir().ok_or(FontError::HomeNotFound)?;
+    let home = home::home_dir().ok_or(FontError::HomeNotFound)?;
     let path = home.join(INSTALL_PATH).join(font_name);
     fs::remove_dir_all(path)?;
     Ok(())
 }
 
 fn append_font_dir(p: &Path, d: &str) -> Result<PathBuf> {
-    let home = home_dir().ok_or(FontError::HomeNotFound)?;
+    let home = home::home_dir().ok_or(FontError::HomeNotFound)?;
     // Safe to unwrap as the file_name is ensured to exist before.
     let file_name = p.file_name().unwrap();
     match p.parent() {
