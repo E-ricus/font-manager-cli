@@ -2,9 +2,13 @@
 A simple CLI to manage fonts on Linux
 
 ## WIP!!
+This proyect is already usable, but breaking changes are expected.
 
 ## Installation
-for now, you need to compile from source, soon to be published as a crate.
+Using cargo
+```sh
+cargo install font-manager
+```
 
 ## About
 This utility simplifies managing fonts inside of the terminal.

@@ -2,9 +2,9 @@
 name = "font-manager"
 description = "A simple utility to manage fonts on unix systems"
 authors = [ "Eric Puentes <eric.david2333@gmail.com>" ]
-version = "0.0.1"
+version = "0.0.2"
 edition = "2018"
-license-file = "LICENSE"
+license = "MIT"
 readme = "README.md"
 repository = "https://github.com/ericpubu/font-manager-cli"
 homepage = "https://github.com/ericpubu/font-manager-cli"
