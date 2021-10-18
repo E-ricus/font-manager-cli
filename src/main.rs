@@ -5,7 +5,6 @@ mod manager;
 mod nerd;
 
 use std::env;
-use std::str::FromStr;
 
 use anyhow::Result;
 use structopt::StructOpt;
@@ -33,6 +32,7 @@ async fn main() -> Result<()> {
 
 async fn manage_font(opt: FontManager) -> Result<()> {
     log::debug!("Args command: {:#?}", opt);
+    let nf = NerdFonts::new()?;
     match opt {
         FontManager::Install(i) => {
             i.valid_command()?;
@@ -45,7 +45,10 @@ async fn manage_font(opt: FontManager) -> Result<()> {
 
             if i.nerd {
                 // Safe to unwrap, as this is already validated
-                return nerd::install_nerd(i.nerd_name.unwrap(), ext_opt).await;
+                let font_name = i.nerd_name.unwrap();
+                nf.valid_font(&font_name)?;
+
+                return nerd::install_nerd(font_name, ext_opt).await;
             }
             if let Some(url) = i.url {
                 return manager::install_from_url(&url, ext_opt).await;
@@ -54,8 +57,8 @@ async fn manage_font(opt: FontManager) -> Result<()> {
                 return manager::install_from_zip(&path, ext_opt).await;
             }
         }
-        FontManager::Uninstall(u) => match NerdFonts::from_str(&u.name) {
-            Ok(n) => nerd::uninstall_nerd(n).await?,
+        FontManager::Uninstall(u) => match nf.valid_font(&u.name) {
+            Ok(_) => nerd::uninstall_nerd(u.name).await?,
             Err(_) => manager::uninstall(&u.name).await?,
         },
     }
@@ -73,7 +76,7 @@ mod tests_manager {
         pretty_env_logger::init();
         let mut install = Install::new();
         install.nerd = true;
-        install.nerd_name = Some(NerdFonts::SourceCodePro("Monoid".into()));
+        install.nerd_name = Some("Monoid".into());
         let opt = FontManager::Install(install);
         let result = manage_font(opt).await;
         assert!(result.is_ok());

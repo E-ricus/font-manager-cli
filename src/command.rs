@@ -4,7 +4,6 @@ use anyhow::Result;
 use structopt::StructOpt;
 
 use crate::errors::FontError;
-use crate::nerd::NerdFonts;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Font manager", about = "a simple font manager utility")]
@@ -24,7 +23,7 @@ pub(super) struct Install {
     pub(super) nerd: bool,
     /// Nerd font name to be installed, only used if nerd is setted to true
     /// The name should be the same one as on the font aggregator project
-    pub(super) nerd_name: Option<NerdFonts>,
+    pub(super) nerd_name: Option<String>,
     #[structopt(short = "z", long = "from-zip")]
     /// Path to the location of the zip file with the fonts to be installed
     /// --from-zip option is mutually exclusive with --nerd  and --from-url
@@ -98,7 +97,7 @@ mod test_command {
     fn test_valid_install_command() {
         let install = Install {
             nerd: true,
-            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
+            nerd_name: Some("SourceCode".into()),
             path: None,
             url: None,
             delete_zip: true,
@@ -113,7 +112,7 @@ mod test_command {
         // Given more than one flag should fail
         let mut install = Install::new();
         install.nerd = true;
-        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.nerd_name = Some("SourceCode".into());
         install.path = Some("the path".into());
         assert!(install.valid_command().is_err());
 
@@ -128,7 +127,7 @@ mod test_command {
         // Given any flag and last, should fail
         let mut install = Install::new();
         install.nerd = true;
-        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.nerd_name = Some("SourceCode".into());
         install.url = Some("the url".into());
         assert!(install.valid_command().is_err());
     }
@@ -142,7 +141,7 @@ mod test_command {
 
         // Given a nerd name without a nerd flag, should fail
         let mut install = Install::new();
-        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.nerd_name = Some("SourceCode".into());
         assert!(install.valid_command().is_err());
     }
 }
