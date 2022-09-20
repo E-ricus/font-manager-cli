@@ -8,7 +8,7 @@ use std::env;
 use std::str::FromStr;
 
 use anyhow::Result;
-use structopt::StructOpt;
+use clap::Parser;
 
 use crate::command::FontManager;
 use crate::files::ExtractOptions;
@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
 
     pretty_env_logger::init();
     let opt = FontManager::from_args();
-    return manage_font(opt).await;
+    manage_font(opt).await
 }
 
 async fn manage_font(opt: FontManager) -> Result<()> {

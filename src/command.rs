@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use structopt::StructOpt;
+use clap::Parser;
 
 use crate::errors::FontError;
 use crate::nerd::NerdFonts;
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "Font manager", about = "a simple font manager utility")]
+#[derive(Debug, Parser)]
+#[clap(name = "Font manager", about = "a simple font manager utility")]
 pub(super) enum FontManager {
     /// Install the given font
     Install(Install),
@@ -15,9 +15,9 @@ pub(super) enum FontManager {
     Uninstall(Uninstall),
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub(super) struct Install {
-    #[structopt(short = "n", long = "nerd")]
+    #[clap(short = 'n', long = "nerd")]
     /// Indicates if it should grab the font from the nerd aggregator
     /// If this is send, the nerd_name should be given as well
     /// --nerd option is mutually exclusive with --from-zip and --from-url
@@ -25,23 +25,23 @@ pub(super) struct Install {
     /// Nerd font name to be installed, only used if nerd is setted to true
     /// The name should be the same one as on the font aggregator project
     pub(super) nerd_name: Option<NerdFonts>,
-    #[structopt(short = "z", long = "from-zip")]
+    #[clap(short = 'z', long = "from-zip")]
     /// Path to the location of the zip file with the fonts to be installed
     /// --from-zip option is mutually exclusive with --nerd  and --from-url
     pub(super) path: Option<PathBuf>,
-    #[structopt(short = "u", long = "from-url")]
+    #[clap(short = 'u', long = "from-url")]
     /// url that downloads a zip with the font
     /// --from-url option is mutually exclusive with --nerd  and --from-zip
     pub(super) url: Option<String>,
     /// indicates if the .zip file with the fonts should be removed
     /// for --nerd it will always delete the zip even if this is provided
-    #[structopt(short = "d", long = "delete-zip")]
+    #[clap(short = 'd', long = "delete-zip")]
     pub(super) delete_zip: bool,
     /// indicates if should ignore .ttf and use .otf version
-    #[structopt(long = "use-otf")]
+    #[clap(long = "use-otf")]
     pub(super) use_otf: bool,
     /// indicates if user shold accept each file to be installed
-    #[structopt(short = "i", long = "interactive")]
+    #[clap(short = 'i', long = "interactive")]
     pub(super) interactive: bool,
 }
 
@@ -83,7 +83,7 @@ impl Install {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub(super) struct Uninstall {
     /// Font name to be uninstalled
     /// For not nerd fonts, you'll need to give the dir_name as it is on the .fonts/ directory

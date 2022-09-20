@@ -37,7 +37,7 @@ pub(crate) fn extract_fonts_from_zip(
             None => continue,
         };
 
-        let file_name = &*file.name();
+        let file_name = file.name();
 
         if file_name.ends_with('/') {
             log::info!("Extracting directory in: \"{}\"", outpath.display());
