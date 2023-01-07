@@ -5,14 +5,13 @@ mod manager;
 mod nerd;
 
 use std::env;
-use std::str::FromStr;
 
 use anyhow::Result;
 use clap::Parser;
 
 use crate::command::FontManager;
 use crate::files::ExtractOptions;
-use crate::nerd::NerdFonts;
+use crate::nerd::VALID_FONTS;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -27,7 +26,7 @@ async fn main() -> Result<()> {
     }
 
     pretty_env_logger::init();
-    let opt = FontManager::from_args();
+    let opt = FontManager::parse();
     manage_font(opt).await
 }
 
@@ -45,7 +44,7 @@ async fn manage_font(opt: FontManager) -> Result<()> {
 
             if i.nerd {
                 // Safe to unwrap, as this is already validated
-                return nerd::install_nerd(i.nerd_name.unwrap(), ext_opt).await;
+                return nerd::install_nerd(&i.nerd_name.unwrap(), ext_opt).await;
             }
             if let Some(url) = i.url {
                 return manager::install_from_url(&url, ext_opt).await;
@@ -54,10 +53,13 @@ async fn manage_font(opt: FontManager) -> Result<()> {
                 return manager::install_from_zip(&path, ext_opt).await;
             }
         }
-        FontManager::Uninstall(u) => match NerdFonts::from_str(&u.name) {
-            Ok(n) => nerd::uninstall_nerd(n).await?,
-            Err(_) => manager::uninstall(&u.name).await?,
-        },
+        FontManager::Uninstall(u) => {
+            let name: &str = &u.name;
+            match VALID_FONTS.contains(&name) {
+                true => nerd::uninstall_nerd(name).await?,
+                false => manager::uninstall(name).await?,
+            }
+        }
     }
     Ok(())
 }
@@ -73,13 +75,13 @@ mod tests_manager {
         pretty_env_logger::init();
         let mut install = Install::new();
         install.nerd = true;
-        install.nerd_name = Some(NerdFonts::SourceCodePro("Monoid".into()));
+        install.nerd_name = Some("Monoid".into());
         let opt = FontManager::Install(install);
         let result = manage_font(opt).await;
         assert!(result.is_ok());
 
         let uninstall = Uninstall {
-            name: String::from("MonoidNerdFont"),
+            name: String::from("Monoid"),
         };
         let opt = FontManager::Uninstall(uninstall);
         let result = manage_font(opt).await;

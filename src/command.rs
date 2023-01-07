@@ -4,7 +4,6 @@ use anyhow::Result;
 use clap::Parser;
 
 use crate::errors::FontError;
-use crate::nerd::NerdFonts;
 
 #[derive(Debug, Parser)]
 #[clap(name = "Font manager", about = "a simple font manager utility")]
@@ -24,7 +23,7 @@ pub(super) struct Install {
     pub(super) nerd: bool,
     /// Nerd font name to be installed, only used if nerd is setted to true
     /// The name should be the same one as on the font aggregator project
-    pub(super) nerd_name: Option<NerdFonts>,
+    pub(super) nerd_name: Option<String>,
     #[clap(short = 'z', long = "from-zip")]
     /// Path to the location of the zip file with the fonts to be installed
     /// --from-zip option is mutually exclusive with --nerd  and --from-url
@@ -79,6 +78,15 @@ impl Install {
             ))
             .into());
         }
+        if self.nerd && self.nerd_name.is_some() {
+            let name: &str = &self.nerd_name.clone().unwrap();
+            if !crate::nerd::VALID_FONTS.contains(&name) {
+                return Err(FontError::CommandError(String::from(
+                    "nerd_name is not valid if --nerd is not selected",
+                ))
+                .into());
+            }
+        }
         Ok(())
     }
 }
@@ -98,7 +106,7 @@ mod test_command {
     fn test_valid_install_command() {
         let install = Install {
             nerd: true,
-            nerd_name: Some(NerdFonts::SourceCodePro("SourceCode".into())),
+            nerd_name: Some("SourceCodePro".to_string()),
             path: None,
             url: None,
             delete_zip: true,
@@ -113,7 +121,7 @@ mod test_command {
         // Given more than one flag should fail
         let mut install = Install::new();
         install.nerd = true;
-        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.nerd_name = Some("SourceCodePro".into());
         install.path = Some("the path".into());
         assert!(install.valid_command().is_err());
 
@@ -128,7 +136,7 @@ mod test_command {
         // Given any flag and last, should fail
         let mut install = Install::new();
         install.nerd = true;
-        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.nerd_name = Some("SourceCodePro".into());
         install.url = Some("the url".into());
         assert!(install.valid_command().is_err());
     }
@@ -142,7 +150,12 @@ mod test_command {
 
         // Given a nerd name without a nerd flag, should fail
         let mut install = Install::new();
-        install.nerd_name = Some(NerdFonts::SourceCodePro("SourceCode".into()));
+        install.nerd_name = Some("SourceCodePro".into());
+        assert!(install.valid_command().is_err());
+        // Given a invalid nerd name, should fail
+        let mut install = Install::new();
+        install.nerd = true;
+        install.nerd_name = Some("Sourcecode".into());
         assert!(install.valid_command().is_err());
     }
 }
