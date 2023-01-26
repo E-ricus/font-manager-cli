@@ -24,10 +24,9 @@ async fn main() -> Result<()> {
             env::set_var("RUST_LOG", "INFO");
         }
     }
-
     pretty_env_logger::init();
-    let opt = FontManager::parse();
-    manage_font(opt).await
+
+    manage_font(FontManager::parse()).await
 }
 
 async fn manage_font(opt: FontManager) -> Result<()> {
@@ -42,9 +41,8 @@ async fn manage_font(opt: FontManager) -> Result<()> {
                 interactive: i.interactive,
             };
 
-            if i.nerd {
-                // Safe to unwrap, as this is already validated
-                return nerd::install_nerd(&i.nerd_name.unwrap(), ext_opt).await;
+            if let Some(nerd_name) = i.nerd {
+                return nerd::install_nerd(&nerd_name, ext_opt).await;
             }
             if let Some(url) = i.url {
                 return manager::install_from_url(&url, ext_opt).await;
@@ -74,8 +72,7 @@ mod tests_manager {
         env::set_var("RUST_LOG", "DEBUG");
         pretty_env_logger::init();
         let mut install = Install::new();
-        install.nerd = true;
-        install.nerd_name = Some("Monoid".into());
+        install.nerd = Some("Monoid".into());
         let opt = FontManager::Install(install);
         let result = manage_font(opt).await;
         assert!(result.is_ok());

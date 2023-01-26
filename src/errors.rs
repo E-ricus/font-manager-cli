@@ -10,7 +10,4 @@ pub(crate) enum FontError {
     InvalidPath,
     #[error("no fonts were installed! check if the files were ignored")]
     FontsIgnored,
-    // TODO: Maybe transform io and files error to more user friendly error
-    // #[error("something went wrong! please report an issue")]
-    // UnexpectedErorr,
 }
