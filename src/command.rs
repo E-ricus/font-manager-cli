@@ -17,17 +17,18 @@ pub(super) enum FontManager {
 #[derive(Debug, Parser)]
 pub(super) struct Install {
     /// Indicates if it should grab the font from the nerd aggregator
-    /// --nerd option is mutually exclusive with --from-zip and --from-url
+    /// --nerd option is mutually exclusive with --from-file and --from-url
     #[arg(short = 'n', long = "nerd")]
     pub(super) nerd: Option<String>,
-    /// Path to the location of the zip file with the fonts to be installed
-    /// --from-zip option is mutually exclusive with --nerd  and --from-url
-    #[arg(short = 'z', long = "from-zip")]
+    /// Path to the location of the compress file with the fonts to be installed
+    /// --from-file option is mutually exclusive with --nerd  and --from-url
+    #[arg(short = 'f', long = "from-file")]
     pub(super) path: Option<PathBuf>,
-    /// url that downloads a zip with the font
-    /// --from-url option is mutually exclusive with --nerd  and --from-zip
+    /// url that downloads a compress file with the fonts
+    /// --from-url option is mutually exclusive with --nerd  and --from-file
     #[arg(short = 'u', long = "from-url")]
     pub(super) url: Option<String>,
+    // TODO: Remove this from the command
     /// indicates if the .zip file with the fonts should be removed
     /// for --nerd it will always delete the zip even if this is provided
     #[arg(short = 'd', long = "delete-zip")]

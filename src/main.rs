@@ -11,7 +11,6 @@ use clap::Parser;
 
 use crate::command::FontManager;
 use crate::files::ExtractOptions;
-use crate::nerd::VALID_FONTS;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -42,22 +41,16 @@ async fn manage_font(opt: FontManager) -> Result<()> {
             };
 
             if let Some(nerd_name) = i.nerd {
-                return nerd::install_nerd(&nerd_name, ext_opt).await;
+                return manager::install_nerd(&nerd_name, ext_opt).await;
             }
             if let Some(url) = i.url {
                 return manager::install_from_url(&url, ext_opt).await;
             }
             if let Some(path) = i.path {
-                return manager::install_from_zip(&path, ext_opt).await;
+                return manager::install_from_file(&path, ext_opt).await;
             }
         }
-        FontManager::Uninstall(u) => {
-            let name: &str = &u.name;
-            match VALID_FONTS.contains(&name) {
-                true => nerd::uninstall_nerd(name).await?,
-                false => manager::uninstall(name).await?,
-            }
-        }
+        FontManager::Uninstall(u) => manager::uninstall(&u.name).await?,
     }
     Ok(())
 }
