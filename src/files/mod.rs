@@ -31,7 +31,7 @@ pub(crate) fn extract_fonts_from_zip(
         let mut file = archive.by_index(i)?;
         let outpath = match file.enclosed_name() {
             Some(path) => {
-                let new_path = append_font_dir(path, font_name)?;
+                let new_path = append_font_dir(&path, font_name)?;
                 new_path.to_owned()
             }
             None => continue,

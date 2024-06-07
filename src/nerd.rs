@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::files::{self, ExtractOptions};
 use crate::manager;
 
-const NERD_URL: &str = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/";
+const NERD_URL: &str = "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/";
 //TODO: Read from file?
 pub const VALID_FONTS: [&str; 50] = [
     "3270",
